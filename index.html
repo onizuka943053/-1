@@ -267,6 +267,92 @@
             </div>
         </section>
 
+        <!-- 分頁：健身菜單 -->
+        <section id="tab-workout" class="space-y-5 tab-content hidden">
+            <!-- AI 產生課表 -->
+            <div class="glass-card rounded-3xl p-5 space-y-3.5 border-emerald-500/30 bg-gradient-to-b from-slate-900/90 to-emerald-950/20">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-xs text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
+                        <span>AI 多元健身課表</span>
+                    </h3>
+                    <span id="workoutGoalLabel" class="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">—</span>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">依你的目標、訓練天數與場地，用 AI 產生一週課表。可重複產生，每次內容會不同。</p>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <label class="block text-slate-400 mb-1">每週訓練天數</label>
+                        <select id="woDays" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-white">
+                            <option value="3">3 天</option>
+                            <option value="4" selected>4 天</option>
+                            <option value="5">5 天</option>
+                            <option value="6">6 天</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">訓練場地</label>
+                        <select id="woPlace" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-white">
+                            <option value="gym" selected>健身房</option>
+                            <option value="home">居家（啞鈴/自重）</option>
+                            <option value="outdoor">戶外 / 公園</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">經驗程度</label>
+                        <select id="woLevel" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-white">
+                            <option value="beginner">初學</option>
+                            <option value="intermediate" selected>中階</option>
+                            <option value="advanced">進階</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">偏好重點</label>
+                        <select id="woFocus" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-white">
+                            <option value="balanced" selected>均衡全身</option>
+                            <option value="upper">偏上半身</option>
+                            <option value="lower">偏下半身</option>
+                            <option value="cardio">多一點有氧</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="text" id="woNote" placeholder="可選：器材限制、傷痛、喜好（如：不要硬拉、只有啞鈴）" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl p-2.5 text-xs text-white placeholder-slate-500">
+                <button onclick="generateAIWorkout()" id="woAiBtn" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 font-bold py-3 rounded-2xl text-xs transition shadow-lg shadow-emerald-500/20 flex items-center justify-center space-x-1.5 disabled:opacity-60">
+                    <i class="fa-solid fa-bolt"></i>
+                    <span>AI 產生專屬課表</span>
+                </button>
+            </div>
+
+            <!-- AI 結果 -->
+            <div id="aiWorkoutBlock" class="hidden space-y-3">
+                <div class="flex items-center justify-between px-1">
+                    <h3 class="font-bold text-xs text-emerald-300 flex items-center space-x-2">
+                        <i class="fa-solid fa-sparkles"></i>
+                        <span id="aiWorkoutTitle">AI 課表</span>
+                    </h3>
+                    <button onclick="generateAIWorkout()" class="text-[11px] text-slate-400 hover:text-emerald-400">再產生一版</button>
+                </div>
+                <div id="aiWorkoutContent" class="space-y-3"></div>
+                <ul id="aiWorkoutTips" class="text-[11px] text-slate-400 space-y-1 list-disc pl-4"></ul>
+            </div>
+
+            <!-- 預設範本（離線也能看） -->
+            <div class="glass-card rounded-3xl p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="font-bold text-xs text-white">預設範本課表</h3>
+                    <span class="text-[10px] text-slate-500">不需 AI</span>
+                </div>
+                <div class="flex gap-2" id="workoutPlanTabs"></div>
+            </div>
+            <div id="workoutPlanContent" class="space-y-3"></div>
+            <div class="glass-card rounded-3xl p-4 space-y-2">
+                <h3 class="font-bold text-xs text-white flex items-center space-x-2">
+                    <i class="fa-solid fa-lightbulb text-amber-400"></i>
+                    <span>訓練小提醒</span>
+                </h3>
+                <ul id="workoutTips" class="text-[11px] text-slate-400 space-y-1.5 list-disc pl-4 leading-relaxed"></ul>
+            </div>
+        </section>
+
         <!-- 分頁 3：TDEE 設定 -->
         <section id="tab-settings" class="space-y-5 tab-content hidden">
             <div class="glass-card rounded-3xl p-5 space-y-4">
@@ -354,18 +440,22 @@
     </main>
 
     <!-- 底部導覽列 -->
-    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-card border-t border-slate-800/80 px-6 py-2.5 flex justify-around items-center z-40 shadow-2xl">
-        <button onclick="switchTab('today')" id="nav-btn-today" class="flex flex-col items-center space-y-1 text-emerald-400 transition">
+    <nav class="fixed bottom-0 left-0 right-0 max-w-md mx-auto glass-card border-t border-slate-800/80 px-3 py-2.5 flex justify-around items-center z-40 shadow-2xl">
+        <button onclick="switchTab('today')" id="nav-btn-today" class="flex flex-col items-center space-y-1 text-emerald-400 transition px-1">
             <i class="fa-solid fa-utensils text-base"></i>
-            <span class="text-[10px] font-bold">記錄追蹤</span>
+            <span class="text-[9px] font-bold">記錄</span>
         </button>
-        <button onclick="switchTab('history')" id="nav-btn-history" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition">
+        <button onclick="switchTab('history')" id="nav-btn-history" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition px-1">
             <i class="fa-solid fa-chart-pie text-base"></i>
-            <span class="text-[10px] font-medium">歷史趨勢</span>
+            <span class="text-[9px] font-medium">趨勢</span>
         </button>
-        <button onclick="switchTab('settings')" id="nav-btn-settings" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition">
+        <button onclick="switchTab('workout')" id="nav-btn-workout" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition px-1">
+            <i class="fa-solid fa-dumbbell text-base"></i>
+            <span class="text-[9px] font-medium">健身</span>
+        </button>
+        <button onclick="switchTab('settings')" id="nav-btn-settings" class="flex flex-col items-center space-y-1 text-slate-400 hover:text-slate-200 transition px-1">
             <i class="fa-solid fa-user-gear text-base"></i>
-            <span class="text-[10px] font-medium">TDEE設定</span>
+            <span class="text-[9px] font-medium">設定</span>
         </button>
     </nav>
 
@@ -680,19 +770,30 @@
 
         // ========== 分頁 ==========
         function switchTab(tId) {
-            ['today', 'history', 'settings'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
+            ['today', 'history', 'workout', 'settings'].forEach(t => {
+                const tab = document.getElementById(`tab-${t}`);
+                if (tab) tab.classList.add('hidden');
                 const btn = document.getElementById(`nav-btn-${t}`);
+                if (!btn) return;
                 btn.classList.remove('text-emerald-400');
                 btn.classList.add('text-slate-400');
-                if (t === 'today') btn.querySelector('span').classList.remove('font-bold');
+                const span = btn.querySelector('span');
+                if (span) {
+                    span.classList.remove('font-bold');
+                    span.classList.add('font-medium');
+                }
             });
             document.getElementById(`tab-${tId}`).classList.remove('hidden');
             const activeBtn = document.getElementById(`nav-btn-${tId}`);
             activeBtn.classList.remove('text-slate-400');
             activeBtn.classList.add('text-emerald-400');
-            if (tId === 'today') activeBtn.querySelector('span').classList.add('font-bold');
+            const activeSpan = activeBtn.querySelector('span');
+            if (activeSpan) {
+                activeSpan.classList.add('font-bold');
+                activeSpan.classList.remove('font-medium');
+            }
             if (tId === 'history') renderHistoryChart();
+            if (tId === 'workout') renderWorkoutPlans();
         }
 
         // ========== 渲染主畫面 ==========
@@ -1367,6 +1468,256 @@
                 `;
             }
             document.getElementById('historyList').innerHTML = histHTML;
+        }
+
+        // ========== 健身菜單 ==========
+        const WORKOUT_PLANS = {
+            cut: {
+                label: '減脂模式',
+                tips: [
+                    '有氧可放在重訓後或分開時段，每週 2–4 次、每次 20–40 分鐘。',
+                    '維持足夠蛋白質，訓練表現較不容易掉。',
+                    '睡眠與步數（建議每天 8,000+ 步）對減脂很關鍵。',
+                    '若長期疲勞，先減少有氧量，不要先砍訓練量。'
+                ],
+                plans: [
+                    {
+                        name: '三分化（推薦）',
+                        days: [
+                            { day: 'Day 1 · 推（胸肩三頭）', items: ['槓鈴臥推 4×6–10', '上斜啞鈴推举 3×8–12', '側平舉 3×12–15', '繩索下壓 3×10–15', '有氧 15–25 分（可選）'] },
+                            { day: 'Day 2 · 拉（背二頭）', items: ['引體向上 / 下拉 4×6–10', '坐姿划船 3×8–12', '面拉 3×12–15', '啞鈴彎舉 3×10–15', '核心 10 分'] },
+                            { day: 'Day 3 · 腿 + 有氧', items: ['深蹲或腿推 4×6–10', '羅馬尼亞硬拉 3×8–12', '腿伸展 / 腿彎舉 3×12–15', '小腿 3×15', '有氧 20–30 分'] },
+                            { day: 'Day 4 · 休息或散步', items: ['輕鬆走路 30–60 分', '伸展 / 泡棉滾筒'] },
+                            { day: 'Day 5 · 再循環 Day 1', items: ['重複推日，重量可微調'] },
+                            { day: 'Day 6 · 再循環 Day 2', items: ['重複拉日'] },
+                            { day: 'Day 7 · 休息', items: ['完整休息或只有散步'] }
+                        ]
+                    },
+                    {
+                        name: '全身×3（時間少）',
+                        days: [
+                            { day: '週一 · 全身 A', items: ['深蹲 3×8', '臥推 3×8', '划船 3×10', '平板支撐 3×30–45秒', '有氧 15 分'] },
+                            { day: '週三 · 全身 B', items: ['硬拉或臀推 3×8', '肩推 3×10', '下拉 3×10', '弓步 3×10/腳', '有氧 20 分'] },
+                            { day: '週五 · 全身 C', items: ['腿推 3×12', '上斜推 3×10', '面拉 3×15', '彎舉+下壓 2×12', '間歇有氧 15 分'] },
+                            { day: '其餘日子', items: ['散步、伸展，保持步數'] }
+                        ]
+                    }
+                ]
+            },
+            bulk: {
+                label: '增肌模式',
+                tips: [
+                    '優先進步重量或次數（漸進超負荷），有氧每週 1–2 次即可。',
+                    '訓練後盡量補充足夠蛋白質與總熱量。',
+                    '大肌群（腿、背、胸）每週至少刺激 2 次較有效。',
+                    '增肌期也要睡飽，睡眠不足會影響恢復與荷爾蒙。'
+                ],
+                plans: [
+                    {
+                        name: '上下半身分化（推薦）',
+                        days: [
+                            { day: 'Day 1 · 上肢 A', items: ['臥推 4×5–8', '劃船 4×6–10', '肩推 3×8–12', '下拉 3×8–12', '二頭+三頭 2–3 組'] },
+                            { day: 'Day 2 · 下肢 A', items: ['深蹲 4×5–8', '羅馬尼亞硬拉 3×6–10', '腿伸展 3×10–15', '腿彎舉 3×10–15', '小腿 3×12–20'] },
+                            { day: 'Day 3 · 休息', items: ['休息或輕量活動'] },
+                            { day: 'Day 4 · 上肢 B', items: ['上斜推 4×6–10', '引體向上 4×6–10', '側平舉 3×12–15', '面拉 3×12–15', '手臂 2–3 組'] },
+                            { day: 'Day 5 · 下肢 B', items: ['前蹲或腿推 4×8–12', '臀推 3×8–12', '弓步 3×10', '腿後側 3×12', '核心'] },
+                            { day: 'Day 6–7', items: ['休息，可安排輕有氧 1 次'] }
+                        ]
+                    },
+                    {
+                        name: '五分化（進階）',
+                        days: [
+                            { day: 'Day 1 · 胸', items: ['臥推 4×6–10', '上斜啞鈴 3×8–12', '夾胸 3×12–15', '三頭 3 組'] },
+                            { day: 'Day 2 · 背', items: ['硬拉或架上拉 3×5', '下拉 4×8–12', '划船 4×8–12', '二頭 3 組'] },
+                            { day: 'Day 3 · 腿', items: ['深蹲 4×6–10', '腿推 3×10–15', '腿彎舉 3×12', '小腿 4×15'] },
+                            { day: 'Day 4 · 肩', items: ['肩推 4×6–10', '側平舉 4×12–15', '面拉 3×15', '後束 3×12'] },
+                            { day: 'Day 5 · 手臂 / 弱點', items: ['二頭 4 組', '三頭 4 組', '可加胸或背補量'] },
+                            { day: 'Day 6–7 · 休息', items: ['恢復為主'] }
+                        ]
+                    }
+                ]
+            },
+            maintain: {
+                label: '維持體重',
+                tips: [
+                    '維持每週 3–5 次訓練即可，重點是穩定與可持續。',
+                    '有氧與重訓平衡，依喜好調整，不必過度追求量。',
+                    '體重穩定時，可把重點放在動作品質與活動度。',
+                    '旅行或忙碌週可用「全身×2」維持刺激。'
+                ],
+                plans: [
+                    {
+                        name: '全身維持（推薦）',
+                        days: [
+                            { day: '週一 · 全身', items: ['深蹲 3×8', '臥推 3×8', '划船 3×10', '肩推 2×10', '核心 2 組'] },
+                            { day: '週三 · 全身', items: ['硬拉或臀推 3×6', '下拉 3×10', '上斜推 3×10', '弓步 2×10', '有氧 15–20 分'] },
+                            { day: '週五 · 全身', items: ['腿推 3×12', '啞鈴推 3×10', '面拉 3×15', '手臂 2 組', '伸展'] },
+                            { day: '其餘', items: ['走路、休閒運動、休息'] }
+                        ]
+                    },
+                    {
+                        name: '推拉腿（精簡）',
+                        days: [
+                            { day: '推日', items: ['臥推 3×8', '肩推 3×10', '側平舉 2×15', '三頭 2×12'] },
+                            { day: '拉日', items: ['下拉 3×10', '划船 3×10', '面拉 2×15', '二頭 2×12'] },
+                            { day: '腿日', items: ['深蹲 3×8', 'RDL 3×10', '腿彎舉 2×12', '小腿 2×15'] },
+                            { day: '彈性安排', items: ['一週各做 1–2 次，依恢復調整'] }
+                        ]
+                    }
+                ]
+            }
+        };
+
+        let selectedWorkoutPlanIndex = 0;
+
+        function renderWorkoutPlans() {
+            const goal = state.settings.goalType || 'maintain';
+            const pack = WORKOUT_PLANS[goal] || WORKOUT_PLANS.maintain;
+            document.getElementById('workoutGoalLabel').textContent = pack.label;
+
+            // plan tabs
+            const tabs = document.getElementById('workoutPlanTabs');
+            tabs.innerHTML = pack.plans.map((pl, i) => `
+                <button onclick="selectedWorkoutPlanIndex=${i};renderWorkoutPlans()"
+                    class="flex-1 py-2 rounded-xl text-[11px] font-semibold transition border ${i === selectedWorkoutPlanIndex ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-800 text-slate-400 border-slate-700'}">
+                    ${pl.name}
+                </button>
+            `).join('');
+
+            if (selectedWorkoutPlanIndex >= pack.plans.length) selectedWorkoutPlanIndex = 0;
+            const plan = pack.plans[selectedWorkoutPlanIndex];
+
+            const content = document.getElementById('workoutPlanContent');
+            content.innerHTML = plan.days.map(d => `
+                <div class="glass-card rounded-2xl p-4 border-slate-800">
+                    <div class="font-bold text-xs text-emerald-300 mb-2">${d.day}</div>
+                    <ul class="space-y-1">
+                        ${d.items.map(it => `<li class="text-[11px] text-slate-300 flex items-start"><span class="text-emerald-500 mr-1.5">•</span><span>${it}</span></li>`).join('')}
+                    </ul>
+                </div>
+            `).join('');
+
+            document.getElementById('workoutTips').innerHTML = pack.tips.map(tip => `<li>${tip}</li>`).join('');
+        }
+
+        async function generateAIWorkout() {
+            const provider = getAiProvider();
+            const hasKey = provider === 'groq'
+                ? !!(localStorage.getItem('nutritrack_groq_key') || '').trim()
+                : !!(localStorage.getItem('nutritrack_gemini_key') || '').trim();
+            if (!hasKey) {
+                showToast('請先在設定中填寫 AI 憑證', 'error');
+                openApiKeyModal();
+                return;
+            }
+
+            const goalMap = { cut: '減脂', bulk: '增肌', maintain: '維持體重與體能' };
+            const goal = state.settings.goalType || 'maintain';
+            const days = document.getElementById('woDays').value;
+            const place = document.getElementById('woPlace').value;
+            const level = document.getElementById('woLevel').value;
+            const focus = document.getElementById('woFocus').value;
+            const note = document.getElementById('woNote').value.trim();
+            const placeText = { gym: '健身房（有器械）', home: '居家（啞鈴、彈力帶或自重）', outdoor: '戶外/公園' }[place];
+            const levelText = { beginner: '初學者', intermediate: '中階', advanced: '進階' }[level];
+            const focusText = { balanced: '均衡全身', upper: '偏上半身', lower: '偏下半身', cardio: '較多有氧' }[focus];
+
+            const prompt = `你是有證照的肌力與體能教練，請用繁體中文為使用者設計「一週」訓練課表。
+條件：
+- 目標：${goalMap[goal] || goal}
+- 每週訓練約 ${days} 天
+- 場地：${placeText}
+- 程度：${levelText}
+- 偏好：${focusText}
+- 體重約 ${state.settings.weight || 65} kg，年齡約 ${state.settings.age || 25}
+${note ? '- 額外需求：' + note : ''}
+
+請只回傳純 JSON（不要 markdown），格式：
+{
+  "title": "課表簡短名稱",
+  "days": [
+    { "day": "Day 1 · 名稱", "items": ["動作 組數×次數", "..."] }
+  ],
+  "tips": ["提醒1", "提醒2", "提醒3"]
+}
+要求：動作具體、適合場地、組數次數合理、有休息日概念、內容與常見範本有差異（多元變化）。`;
+
+            const btn = document.getElementById('woAiBtn');
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i><span>AI 產生中...</span>';
+
+            try {
+                let txt = '';
+                if (provider === 'groq') {
+                    const apiKey = localStorage.getItem('nutritrack_groq_key').trim();
+                    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': 'Bearer ' + apiKey
+                        },
+                        body: JSON.stringify({
+                            model: 'qwen/qwen3.8-27b',
+                            messages: [{ role: 'user', content: prompt }],
+                            temperature: 0.7,
+                            max_tokens: 2048,
+                            response_format: { type: 'json_object' }
+                        })
+                    });
+                    if (!res.ok) throw new Error('Groq ' + res.status);
+                    const data = await res.json();
+                    txt = data.choices?.[0]?.message?.content || '';
+                } else {
+                    const apiKey = localStorage.getItem('nutritrack_gemini_key').trim();
+                    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+                    let lastErr = null;
+                    for (const model of models) {
+                        try {
+                            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                            const res = await fetch(url, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: prompt }] }],
+                                    generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
+                                })
+                            });
+                            if (!res.ok) { lastErr = new Error(model + ' ' + res.status); continue; }
+                            const data = await res.json();
+                            txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                            if (txt) break;
+                        } catch (e) { lastErr = e; }
+                    }
+                    if (!txt) throw lastErr || new Error('Gemini 失敗');
+                }
+
+                txt = txt.replace(/```json/gi, '').replace(/```/g, '').trim();
+                const fb = txt.indexOf('{'), lb = txt.lastIndexOf('}');
+                if (fb !== -1 && lb !== -1) txt = txt.substring(fb, lb + 1);
+                const plan = JSON.parse(txt);
+                if (!plan.days || !Array.isArray(plan.days)) throw new Error('格式不正確');
+
+                document.getElementById('aiWorkoutTitle').textContent = plan.title || 'AI 專屬課表';
+                document.getElementById('aiWorkoutContent').innerHTML = plan.days.map(d => `
+                    <div class="glass-card rounded-2xl p-4 border-emerald-500/20">
+                        <div class="font-bold text-xs text-emerald-300 mb-2">${escapeHtml(d.day || '')}</div>
+                        <ul class="space-y-1">
+                            ${(d.items || []).map(it => `<li class="text-[11px] text-slate-300 flex items-start"><span class="text-emerald-500 mr-1.5">•</span><span>${escapeHtml(String(it))}</span></li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('');
+                document.getElementById('aiWorkoutTips').innerHTML = (plan.tips || []).map(tip => `<li>${escapeHtml(String(tip))}</li>`).join('');
+                document.getElementById('aiWorkoutBlock').classList.remove('hidden');
+                document.getElementById('aiWorkoutBlock').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                showToast('AI 課表已產生');
+            } catch (e) {
+                console.error(e);
+                showToast('AI 課表產生失敗：' + (e.message || '請稍後再試'), 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
         }
 
         // ========== 匯出 / 匯入 ==========
