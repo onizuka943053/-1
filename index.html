@@ -219,6 +219,42 @@
                 </div>
             </div>
 
+            <!-- AI 健身美食菜單 -->
+            <div class="glass-card rounded-3xl p-5 space-y-3.5 border-cyan-500/20 bg-gradient-to-b from-slate-900/90 to-cyan-950/15">
+                <div class="flex items-center space-x-2">
+                    <div class="w-7 h-7 rounded-xl bg-cyan-500/20 flex items-center justify-center text-cyan-400 shadow-inner">
+                        <i class="fa-solid fa-utensils text-xs"></i>
+                    </div>
+                    <h3 class="font-bold text-xs text-white tracking-wide">AI 健身美食菜單建議</h3>
+                </div>
+                <p class="text-[11px] text-slate-400 leading-relaxed">依今日熱量／蛋白質目標與剩餘量，產生適合健身的一日餐點（偏台灣常見食材）。</p>
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <label class="block text-slate-400 mb-1">餐點範圍</label>
+                        <select id="mealScope" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-white">
+                            <option value="full" selected>一日三餐+點心</option>
+                            <option value="remaining">依今日剩餘熱量</option>
+                            <option value="next">下一餐建議</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-slate-400 mb-1">飲食風格</label>
+                        <select id="mealStyle" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-white">
+                            <option value="tw" selected>台式健身餐</option>
+                            <option value="simple">簡單家常</option>
+                            <option value="highpro">高蛋白優先</option>
+                            <option value="budget">省錢外食</option>
+                        </select>
+                    </div>
+                </div>
+                <input type="text" id="mealNote" placeholder="可選：不吃牛肉、素食、只在公司附近買…" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-xl p-2.5 text-xs text-white placeholder-slate-500">
+                <button onclick="generateAIMeals()" id="mealAiBtn" class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-slate-950 font-bold py-3 rounded-2xl text-xs transition shadow-lg shadow-cyan-500/20 flex items-center justify-center space-x-1.5 disabled:opacity-60">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <span>AI 建議可以吃什麼</span>
+                </button>
+                <div id="aiMealBlock" class="hidden space-y-2.5 pt-1"></div>
+            </div>
+
             <!-- 常用食物（我的最愛） -->
             <div class="space-y-3">
                 <div class="flex justify-between items-center px-1">
@@ -1718,6 +1754,163 @@ ${note ? '- 額外需求：' + note : ''}
                 btn.disabled = false;
                 btn.innerHTML = original;
             }
+        }
+
+
+        async function generateAIMeals() {
+            const provider = getAiProvider();
+            const hasKey = provider === 'groq'
+                ? !!(localStorage.getItem('nutritrack_groq_key') || '').trim()
+                : !!(localStorage.getItem('nutritrack_gemini_key') || '').trim();
+            if (!hasKey) {
+                showToast('請先設定 AI 憑證', 'error');
+                openApiKeyModal();
+                return;
+            }
+
+            const today = getLocalDateKey();
+            const logs = state.logs[today] || [];
+            const consumedCal = logs.reduce((s, i) => s + (Number(i.calories) || 0), 0);
+            const consumedPro = logs.reduce((s, i) => s + (Number(i.protein) || 0), 0);
+            const targetCal = state.settings.targetCalories || 2000;
+            const targetPro = state.settings.targetProtein || 130;
+            const remainCal = Math.max(0, targetCal - consumedCal);
+            const remainPro = Math.max(0, targetPro - consumedPro);
+            const goalMap = { cut: '減脂', bulk: '增肌', maintain: '維持' };
+            const goal = goalMap[state.settings.goalType] || '維持';
+            const scope = document.getElementById('mealScope').value;
+            const style = document.getElementById('mealStyle').value;
+            const note = document.getElementById('mealNote').value.trim();
+            const styleText = {
+                tw: '台式健身餐（雞胸、蛋、地瓜、青花菜、豆漿等）',
+                simple: '簡單家常、好準備',
+                highpro: '高蛋白優先',
+                budget: '省錢、便利商店或常見外食可達成'
+            }[style];
+            const scopeText = {
+                full: `規劃完整一日菜單，總熱量約 ${targetCal} kcal、蛋白質約 ${targetPro} g`,
+                remaining: `只規劃「還能吃」的餐點，剩餘約 ${remainCal} kcal、蛋白質約 ${remainPro} g`,
+                next: `只建議「下一餐」一份，熱量約 ${Math.min(remainCal, Math.round(targetCal/3))} kcal 左右`
+            }[scope];
+
+            const prompt = `你是台灣健身營養顧問。請用繁體中文建議菜單。
+使用者狀態：
+- 目標：${goal}
+- 全日目標：${targetCal} kcal / 蛋白質 ${targetPro} g
+- 今日已吃：${Math.round(consumedCal)} kcal / 蛋白質 ${Math.round(consumedPro)} g
+- 剩餘：${Math.round(remainCal)} kcal / 蛋白質 ${Math.round(remainPro)} g
+- 需求：${scopeText}
+- 風格：${styleText}
+${note ? '- 限制或偏好：' + note : ''}
+
+請只回傳純 JSON（不要 markdown）：
+{
+  "summary": "一句話總結",
+  "meals": [
+    {
+      "meal": "早餐",
+      "name": "餐點名稱",
+      "calories": 數字,
+      "protein": 數字,
+      "desc": "簡短說明或組成"
+    }
+  ]
+}
+要求：份量務實、名稱具體、熱量蛋白質合理、適合健身；若是 remaining/next 不要超出剩餘太多。`;
+
+            const btn = document.getElementById('mealAiBtn');
+            const original = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i><span>AI 規劃中...</span>';
+
+            try {
+                let txt = '';
+                if (provider === 'groq') {
+                    const apiKey = localStorage.getItem('nutritrack_groq_key').trim();
+                    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey },
+                        body: JSON.stringify({
+                            model: 'qwen/qwen3.8-27b',
+                            messages: [{ role: 'user', content: prompt }],
+                            temperature: 0.65,
+                            max_tokens: 1536,
+                            response_format: { type: 'json_object' }
+                        })
+                    });
+                    if (!res.ok) throw new Error('Groq ' + res.status);
+                    const data = await res.json();
+                    txt = data.choices?.[0]?.message?.content || '';
+                } else {
+                    const apiKey = localStorage.getItem('nutritrack_gemini_key').trim();
+                    const models = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-1.5-flash'];
+                    let lastErr = null;
+                    for (const model of models) {
+                        try {
+                            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+                            const res = await fetch(url, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    contents: [{ parts: [{ text: prompt }] }],
+                                    generationConfig: { responseMimeType: 'application/json', temperature: 0.65 }
+                                })
+                            });
+                            if (!res.ok) { lastErr = new Error(model + ' ' + res.status); continue; }
+                            const data = await res.json();
+                            txt = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+                            if (txt) break;
+                        } catch (e) { lastErr = e; }
+                    }
+                    if (!txt) throw lastErr || new Error('Gemini 失敗');
+                }
+
+                txt = txt.replace(/```json/gi, '').replace(/```/g, '').trim();
+                const fb = txt.indexOf('{'), lb = txt.lastIndexOf('}');
+                if (fb !== -1 && lb !== -1) txt = txt.substring(fb, lb + 1);
+                const plan = JSON.parse(txt);
+                if (!plan.meals || !Array.isArray(plan.meals)) throw new Error('格式錯誤');
+
+                // store for one-click add
+                window._aiMeals = plan.meals;
+
+                const block = document.getElementById('aiMealBlock');
+                block.classList.remove('hidden');
+                block.innerHTML = `
+                    <div class="text-[11px] text-cyan-300/90 mb-1">${escapeHtml(plan.summary || '以下是建議菜單')}</div>
+                    ${plan.meals.map((m, i) => `
+                        <div class="bg-slate-900/70 border border-slate-700/80 rounded-2xl p-3.5 text-xs">
+                            <div class="flex justify-between items-start gap-2">
+                                <div class="min-w-0 flex-1">
+                                    <div class="text-[10px] text-cyan-400 font-semibold">${escapeHtml(m.meal || '餐點')}</div>
+                                    <div class="font-bold text-white mt-0.5">${escapeHtml(m.name || '')}</div>
+                                    <div class="text-[10px] text-slate-400 mt-1">${escapeHtml(m.desc || '')}</div>
+                                    <div class="text-[11px] text-emerald-400 mt-1.5 font-semibold">${Number(m.calories)||0} kcal · 蛋白質 ${Number(m.protein)||0}g</div>
+                                </div>
+                                <button onclick="addAIMealItem(${i})" class="flex-shrink-0 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/30 px-2.5 py-1.5 rounded-xl text-[10px] font-bold transition">
+                                    加入今日
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                    <button onclick="generateAIMeals()" class="w-full text-[11px] text-slate-400 hover:text-cyan-400 py-2">再產生一版建議</button>
+                `;
+                showToast('菜單建議已產生');
+            } catch (e) {
+                console.error(e);
+                showToast('菜單產生失敗：' + (e.message || ''), 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        }
+
+        function addAIMealItem(index) {
+            const m = (window._aiMeals || [])[index];
+            if (!m) return;
+            const name = (m.meal ? m.meal + ' · ' : '') + (m.name || 'AI 建議餐');
+            addLogItem(name, Number(m.calories) || 0, Number(m.protein) || 0);
+            showToast('已加入今日紀錄');
         }
 
         // ========== 匯出 / 匯入 ==========
