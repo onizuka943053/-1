@@ -79,7 +79,7 @@
                 <div class="absolute -right-12 -bottom-12 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
                 <div class="flex justify-between items-start mb-3">
                     <div>
-                        <span id="goalBadge" class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">維持體重</span>
+                        <span id="goalBadge" onclick="openModal('customGoalModal')" class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 cursor-pointer">維持體重</span>
                         <h2 class="text-[11px] text-slate-400 mt-2 font-medium">今日熱量剩餘</h2>
                     </div>
                     <button onclick="switchTab('settings')" class="text-slate-400 hover:text-white text-xs flex items-center space-x-1 bg-slate-800/70 px-2.5 py-1 rounded-xl border border-slate-700/80 transition">
@@ -89,10 +89,10 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 items-center">
-                    <div class="relative flex flex-col items-center justify-center p-2 bg-slate-900/40 rounded-2xl border border-slate-800">
+                    <div onclick="openModal('customGoalModal')" class="relative flex flex-col items-center justify-center p-2 bg-slate-900/40 rounded-2xl border border-slate-800 active:border-emerald-500/50 cursor-pointer transition">
                         <div class="text-3xl font-black tracking-tight" id="statRemaining">--</div>
                         <div class="text-[11px] text-slate-400 mt-0.5">大卡剩餘</div>
-                        <div class="text-[10px] text-slate-500 mt-1">目標: <span id="statTarget">--</span> kcal</div>
+                        <div class="text-[10px] text-emerald-400/90 mt-1 font-medium">目標: <span id="statTarget">--</span> kcal ✏️</div>
                     </div>
                     <div class="space-y-3 pl-1">
                         <div>
@@ -104,9 +104,9 @@
                                 <div id="calorieBar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full rounded-full transition-all duration-500" style="width: 0%"></div>
                             </div>
                         </div>
-                        <div>
+                        <div onclick="openModal('customGoalModal')" class="cursor-pointer">
                             <div class="flex justify-between text-xs mb-1">
-                                <span class="text-slate-400">蛋白質</span>
+                                <span class="text-slate-400">蛋白質 <span class="text-emerald-400/80">✏️</span></span>
                                 <span class="font-bold text-white"><span id="statProtein">0</span> / <span id="statProteinTarget">--</span>g</span>
                             </div>
                             <div class="w-full bg-slate-800/80 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-700/50">
@@ -115,6 +115,10 @@
                         </div>
                     </div>
                 </div>
+                <button onclick="openModal('customGoalModal')" class="mt-3 w-full text-[11px] text-slate-400 hover:text-emerald-400 border border-slate-700/60 hover:border-emerald-500/40 rounded-xl py-2 transition flex items-center justify-center space-x-1.5">
+                    <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+                    <span>手動修改熱量 / 蛋白質目標</span>
+                </button>
             </div>
 
             <!-- 水分追蹤 -->
@@ -449,20 +453,37 @@
     <div id="customGoalModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
         <div class="glass-card w-full max-w-xs rounded-3xl p-5 space-y-4 border border-slate-700 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <h3 class="font-bold text-xs text-emerald-400">快速調整目標</h3>
+                <h3 class="font-bold text-xs text-emerald-400">手動修改目標</h3>
                 <button onclick="closeModal('customGoalModal')" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-base"></i></button>
             </div>
-            <div class="space-y-3 text-xs">
+            <div class="space-y-4 text-xs">
                 <div>
-                    <label class="block text-slate-400 mb-1">目標熱量 (kcal)</label>
-                    <input type="number" id="modalTargetCal" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-white">
+                    <label class="block text-slate-400 mb-1.5">目標熱量 (kcal)</label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="nudgeGoal('cal', -100)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-white flex items-center justify-center active:bg-slate-700">−</button>
+                        <input type="number" id="modalTargetCal" class="flex-1 bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-white text-center text-sm font-bold">
+                        <button type="button" onclick="nudgeGoal('cal', 100)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-white flex items-center justify-center active:bg-slate-700">+</button>
+                    </div>
+                    <div class="flex gap-1.5 mt-2">
+                        <button type="button" onclick="nudgeGoal('cal', -50)" class="flex-1 py-1 rounded-lg bg-slate-800/80 text-slate-400 text-[10px]">−50</button>
+                        <button type="button" onclick="nudgeGoal('cal', 50)" class="flex-1 py-1 rounded-lg bg-slate-800/80 text-slate-400 text-[10px]">+50</button>
+                    </div>
                 </div>
                 <div>
-                    <label class="block text-slate-400 mb-1">目標蛋白質 (g)</label>
-                    <input type="number" id="modalTargetPro" class="w-full bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-white">
+                    <label class="block text-slate-400 mb-1.5">目標蛋白質 (g)</label>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="nudgeGoal('pro', -10)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-white flex items-center justify-center active:bg-slate-700">−</button>
+                        <input type="number" id="modalTargetPro" class="flex-1 bg-slate-900 border border-slate-700/80 rounded-xl p-2.5 text-white text-center text-sm font-bold">
+                        <button type="button" onclick="nudgeGoal('pro', 10)" class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 text-white flex items-center justify-center active:bg-slate-700">+</button>
+                    </div>
+                    <div class="flex gap-1.5 mt-2">
+                        <button type="button" onclick="nudgeGoal('pro', -5)" class="flex-1 py-1 rounded-lg bg-slate-800/80 text-slate-400 text-[10px]">−5</button>
+                        <button type="button" onclick="nudgeGoal('pro', 5)" class="flex-1 py-1 rounded-lg bg-slate-800/80 text-slate-400 text-[10px]">+5</button>
+                    </div>
                 </div>
-                <button onclick="saveModalGoal()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition shadow-md shadow-emerald-500/20 mt-1">
-                    立即更新
+                <p class="text-[10px] text-slate-500 leading-relaxed">也可直接點數字欄位用鍵盤輸入。儲存後會標記為「自訂目標」。</p>
+                <button onclick="saveModalGoal()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition shadow-md shadow-emerald-500/20">
+                    儲存目標
                 </button>
             </div>
         </div>
@@ -1230,14 +1251,30 @@
             showToast(`目標已更新：${state.settings.targetCalories} kcal / 蛋白質 ${state.settings.targetProtein}g`);
         }
 
+        function nudgeGoal(kind, delta) {
+            if (kind === 'cal') {
+                const el = document.getElementById('modalTargetCal');
+                const v = parseFloat(el.value) || 0;
+                el.value = Math.max(0, Math.round(v + delta));
+            } else {
+                const el = document.getElementById('modalTargetPro');
+                const v = parseFloat(el.value) || 0;
+                el.value = Math.max(0, Math.round((v + delta) * 10) / 10);
+            }
+        }
+
         function saveModalGoal() {
-            state.settings.targetCalories = parseFloat(document.getElementById('modalTargetCal').value) || state.settings.targetCalories;
-            state.settings.targetProtein = parseFloat(document.getElementById('modalTargetPro').value) || state.settings.targetProtein;
+            const cal = parseFloat(document.getElementById('modalTargetCal').value);
+            const pro = parseFloat(document.getElementById('modalTargetPro').value);
+            if (isNaN(cal) || cal < 0) { showToast('請輸入有效熱量目標', 'error'); return; }
+            if (isNaN(pro) || pro < 0) { showToast('請輸入有效蛋白質目標', 'error'); return; }
+            state.settings.targetCalories = Math.round(cal);
+            state.settings.targetProtein = Math.round(pro * 10) / 10;
             state.settings.goalName = '自訂目標';
             saveToStorage();
             closeModal('customGoalModal');
             renderUI();
-            showToast('自訂目標已更新');
+            showToast(`目標已更新：${state.settings.targetCalories} kcal / ${state.settings.targetProtein}g 蛋白質`);
         }
 
         // ========== 歷史圖表 ==========
